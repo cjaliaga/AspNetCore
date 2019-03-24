@@ -58,6 +58,8 @@ namespace Microsoft.AspNetCore.StaticFiles
                     // Routing first => static files noops
                     app.Use(next => context =>
                     {
+                        app.UseRouting();
+
                         // Assign an endpoint, this will make the default files noop.
                         context.SetEndpoint(new Endpoint((c) =>
                         {
@@ -65,6 +67,8 @@ namespace Microsoft.AspNetCore.StaticFiles
                         },
                         new EndpointMetadataCollection(),
                         "test"));
+
+                        app.UseEndpoints(endpoints => {});
 
                         return next(context);
                     });
