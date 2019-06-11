@@ -7,7 +7,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http.Internal;
+using Microsoft.AspNetCore.Internal;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using Microsoft.Net.Http.Headers;
 
@@ -183,9 +186,11 @@ namespace Microsoft.AspNetCore.Http.Features
                             var fileSection = new FileMultipartSection(section, contentDisposition);
 
                             // Enable buffering for the file if not already done for the full body
+                            var bufferingOptions = _request.HttpContext.RequestServices.GetRequiredService<IOptions<HttpBufferingOptions>>().Value;
                             section.EnableRewind(
                                 _request.HttpContext.Response.RegisterForDispose,
-                                _options.MemoryBufferThreshold, _options.MultipartBodyLengthLimit);
+                                _options.MemoryBufferThreshold, _options.MultipartBodyLengthLimit,
+                                AspNetCoreTempDirectory.TempDirectoryFactoryPath(bufferingOptions.TempFileDirectory));
 
                             // Find the end
                             await section.Body.DrainAsync(cancellationToken);

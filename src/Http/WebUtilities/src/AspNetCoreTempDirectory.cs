@@ -33,5 +33,21 @@ namespace Microsoft.AspNetCore.Internal
         }
 
         public static Func<string> TempDirectoryFactory => () => TempDirectory;
+
+        public static Func<string> TempDirectoryFactoryPath(string path)
+        {
+            return () =>
+            {
+                // Look for folders in the following order.
+                var temp = path ?? Path.GetTempPath();
+
+                if (!Directory.Exists(temp))
+                {
+                    throw new DirectoryNotFoundException(temp);
+                }
+
+                return temp;
+            };
+        }
     }
 }

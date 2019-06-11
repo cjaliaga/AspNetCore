@@ -4,6 +4,8 @@
 using System;
 using Microsoft.AspNetCore.Internal;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace Microsoft.AspNetCore.Http.Internal
 {
@@ -21,7 +23,8 @@ namespace Microsoft.AspNetCore.Http.Internal
             var body = request.Body;
             if (!body.CanSeek)
             {
-                var fileStream = new FileBufferingReadStream(body, bufferThreshold, bufferLimit, AspNetCoreTempDirectory.TempDirectoryFactory);
+                var bufferingOptions = request.HttpContext.RequestServices.GetRequiredService<IOptions<HttpBufferingOptions>>().Value;
+                var fileStream = new FileBufferingReadStream(body, bufferThreshold, bufferLimit, AspNetCoreTempDirectory.TempDirectoryFactoryPath(bufferingOptions.TempFileDirectory));
                 request.Body = fileStream;
                 request.HttpContext.Response.RegisterForDispose(fileStream);
             }
@@ -29,7 +32,7 @@ namespace Microsoft.AspNetCore.Http.Internal
         }
 
         public static MultipartSection EnableRewind(this MultipartSection section, Action<IDisposable> registerForDispose,
-            int bufferThreshold = DefaultBufferThreshold, long? bufferLimit = null)
+            int bufferThreshold = DefaultBufferThreshold, long? bufferLimit = null, Func<string> tempFileDirectoryAccessor = null)
         {
             if (section == null)
             {
@@ -43,7 +46,8 @@ namespace Microsoft.AspNetCore.Http.Internal
             var body = section.Body;
             if (!body.CanSeek)
             {
-                var fileStream = new FileBufferingReadStream(body, bufferThreshold, bufferLimit, AspNetCoreTempDirectory.TempDirectoryFactory);
+                tempFileDirectoryAccessor ??= AspNetCoreTempDirectory.TempDirectoryFactory;
+                var fileStream = new FileBufferingReadStream(body, bufferThreshold, bufferLimit, tempFileDirectoryAccessor);
                 section.Body = fileStream;
                 registerForDispose(fileStream);
             }
