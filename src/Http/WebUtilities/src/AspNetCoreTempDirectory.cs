@@ -4,9 +4,9 @@
 using System;
 using System.IO;
 
-namespace Microsoft.AspNetCore.Internal
+namespace Microsoft.AspNetCore.WebUtilities
 {
-    internal static class AspNetCoreTempDirectory
+    public static class AspNetCoreTempDirectory
     {
         private static string _tempDirectory;
 
